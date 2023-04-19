@@ -19,10 +19,10 @@ class Network(nn.Module):
         self.hidden_layers = nn.ModuleList([nn.Linear(input_size, hidden_layers[0])])
         
         # Add a variable number of more hidden layers
-        layer_sizes = zip(hidden_layers[:-1], hidden_layers[1:])
+        layer_sizes = zip(hidden_layers[:-1], hidden_layers[1:]) # [:-1]では、0,1,...としてN-1までの配列を返す
         self.hidden_layers.extend([nn.Linear(h1, h2) for h1, h2 in layer_sizes])
         
-        self.output = nn.Linear(hidden_layers[-1], output_size)
+        self.output = nn.Linear(hidden_layers[-1], output_size) # [-1]は配列の最後の要素
         
         self.dropout = nn.Dropout(p=drop_p)
         
@@ -42,18 +42,18 @@ def validation(model, testloader, criterion):
     test_loss = 0
     for images, labels in testloader:
 
-        images = images.resize_(images.size()[0], 784)
+        images = images.resize_(images.size()[0], 2500)
 
         output = model.forward(images)
-        test_loss += criterion(output, labels).item()
+        test_loss += criterion(output, labels).item() # 損失を計算する
 
         ## Calculating the accuracy 
         # Model's output is log-softmax, take exponential to get the probabilities
-        ps = torch.exp(output)
+        ps = torch.exp(output) # logのSoftmaxからSoftmaxを取得
         # Class with highest probability is our predicted class, compare with true label
         equality = (labels.data == ps.max(1)[1])
         # Accuracy is number of correct predictions divided by all predictions, just take the mean
-        accuracy += equality.type_as(torch.FloatTensor()).mean()
+        accuracy += equality.type_as(torch.FloatTensor()).mean() # BoolをFloat(0,1)に変換する
 
     return test_loss, accuracy
 
@@ -69,7 +69,7 @@ def train(model, trainloader, testloader, criterion, optimizer, epochs=5, print_
             steps += 1
             
             # Flatten images into a 784 long vector
-            images.resize_(images.size()[0], 784)
+            images.resize_(images.size()[0], 2500)
             
             optimizer.zero_grad()
             
@@ -89,7 +89,7 @@ def train(model, trainloader, testloader, criterion, optimizer, epochs=5, print_
                     test_loss, accuracy = validation(model, testloader, criterion)
                 
                 print("Epoch: {}/{}.. ".format(e+1, epochs),
-                      "Training Loss: {:.3f}.. ".format(running_loss/print_every),
+                      "Training Loss: {:.3f}.. ".format(running_loss/print_every), # print_everyは、len(trainloader)と同じような役割を果たすが、途中で出力するために、全バッチ数であるlen(trainloader)ではなく、print_everyを使用する
                       "Test Loss: {:.3f}.. ".format(test_loss/len(testloader)),
                       "Test Accuracy: {:.3f}".format(accuracy/len(testloader)))
                 
